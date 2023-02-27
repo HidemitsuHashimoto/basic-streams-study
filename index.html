@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+</body>
+<script>
+  fetch('http://localhost:8000')
+    .then(resp => resp.body)
+    .then(rb => {
+      const reader = rb.getReader()
+
+      return new ReadableStream({
+        start(controller) {
+          function push() {
+            reader.read().then(({ done, value }) => {
+              if(done) {
+                console.log('done', done)
+                controller.close()
+                return
+              }
+
+              controller.enqueue(value)
+
+              console.log(done, value)
+              push()
+            })
+          }
+
+          push()
+        }
+      })
+    })
+    .then(stream => new Response(stream).text())
+    .then(result => console.log('RESULT', result))
+</script>
+</html>
